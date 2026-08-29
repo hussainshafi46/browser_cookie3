@@ -123,7 +123,8 @@ def _get_osx_keychain_password(osx_key_service, osx_key_user):
 
 def _expand_win_path(path: Union[dict, str]):
     if not isinstance(path, dict):
-        path = {'path': path, 'env': 'APPDATA'}
+        # path may be None
+        path = {'path': path or '', 'env': 'APPDATA'}
     return os.path.join(os.getenv(path['env'], ''), path['path'])
 
 
@@ -384,6 +385,9 @@ class _DatabaseConnetion():
                 return con
 
     def __get_connection_legacy(self):
+        # skip if file doesn't exist
+        if not os.path.isfile(self.__database_file):
+            return
         with tempfile.NamedTemporaryFile(suffix='.sqlite') as tf:
             self.__temp_cookie_file = tf.name
         try:
@@ -400,7 +404,10 @@ class _DatabaseConnetion():
 
         self.__temp_cookie_file = tempfile.NamedTemporaryFile(
             suffix='.sqlite').name
-        shadowcopy.shadow_copy(self.__database_file, self.__temp_cookie_file)
+        try:
+            shadowcopy.shadow_copy(self.__database_file, self.__temp_cookie_file)
+        except shadowcopy.exceptions.RequiresAdminError:
+            return None
         con = sqlite3.connect(self.__temp_cookie_file)
         if self.__check_connection_ok(con):
             return con
@@ -475,7 +482,8 @@ class ChromiumBased:
         elif sys.platform == "win32":
             key_file = self.key_file or _expand_paths(windows_keys, 'windows')
 
-            if key_file:
+            # check if file actually exists
+            if key_file and os.path.isfile(key_file):
                 with open(key_file, 'rb') as f:
                     key_file_json = json.load(f)
                     key64 = key_file_json['os_crypt']['encrypted_key'].encode(
@@ -1246,7 +1254,7 @@ class Lynx:
 
     def load(self):
         cj = http.cookiejar.CookieJar()
-        if not self.cookie_file:
+        if not self.cookie_file or not os.path.isfile(self.cookie_file):
             raise BrowserCookieError('Cannot find Lynx cookie file')
         with open(self.cookie_file) as f:
             for line in f.read().splitlines():
