@@ -1084,6 +1084,7 @@ class Firefox(FirefoxBased):
         args = {
             'linux_data_dirs': [
                 '~/snap/firefox/common/.mozilla/firefox',
+                '~/.config/mozilla/firefox', # XDG config path
                 '~/.mozilla/firefox'
             ],
             'windows_data_dirs': [
