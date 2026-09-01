@@ -1411,7 +1411,7 @@ def w3m(cookie_file=None, domain_name=""):
     """
     return W3m(cookie_file, domain_name).load()
 
-all_browsers = [chrome, chromium, opera, opera_gx, brave, edge, vivaldi, firefox, librewolf, safari, lynx, w3m, arc]
+all_browsers = [chrome, chromium, opera, opera_gx, brave, edge, vivaldi, firefox, librewolf, safari, lynx, w3m]
 
 def load(domain_name=""):
     """Try to load cookies from all supported browsers and return combined cookiejar
